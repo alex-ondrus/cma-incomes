@@ -1,0 +1,186 @@
+---
+title: "World Games"
+author: "Alex Ondrus"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE, message=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+
+library(tidyverse)
+
+world_cities <- read_csv("WorldGames/worldcities.csv")
+
+MLB_data <- read_csv(
+  "WorldGames/Week 32 - The World Series.csv",
+  show_col_types = FALSE
+) %>% 
+  separate_wider_delim(
+    `Winning team`,
+    delim = " ",
+    names = paste(
+      "WinningPt", 1:3, sep = ""
+    ),
+    too_few = "align_start"
+  ) %>% 
+  separate_wider_delim(
+    `Losing team`,
+    delim = " ",
+    names = paste(
+      "LosingPt", 1:3, sep = ""
+    ),
+    too_few = "align_start"
+  ) %>% 
+  mutate(
+    WinningCity = case_when(
+      is.na(WinningPt3) ~ WinningPt1,
+      WinningPt2 %in% c("Blue", "White", "Red") ~ WinningPt1,
+      TRUE ~ paste(WinningPt1, WinningPt2)
+    ),
+    LosingCity = case_when(
+      is.na(LosingPt3) ~ LosingPt1,
+      LosingPt2 %in% c("Blue", "White", "Red") ~ LosingPt1,
+      TRUE ~ paste(LosingPt1, LosingPt2)
+    )
+  ) %>% 
+  select(
+    Year, WinningCity, LosingCity
+  ) %>% 
+  pivot_longer(
+    contains("City"),
+    names_to = "WinnerLoser",
+    values_to = "City"
+  ) %>% 
+  mutate(
+    MarkerLabel = paste("MLB World Series", Year),
+    Event = "MLB 'World' Series",
+    City = case_when(
+      City == "Minnesota" ~ "Minneapolis",
+      City == "Arizona" ~ "Phoenix",
+      City == "Tampa Bay" ~ "Tampa",
+      City == "Texas" ~ "Arlington",
+      City == "Florida" ~ "Miami",
+      City == "Colorado" ~ "Denver",
+      TRUE ~ City
+    )
+  ) %>% 
+  select(-WinnerLoser) %>% 
+  left_join(
+    world_cities %>% 
+      filter(
+        country %in% c("Canada","United States"),
+        city != "Arlington" | admin_name == "Texas",
+        city != "Washington" | admin_name == "District of Columbia",
+        city != "Cleveland" | admin_name == "Ohio",
+        city != "Oakland" | admin_name == "California",
+        city != "Brooklyn" | admin_name == "New York",
+        city != "Kansas City" | admin_name == "Missouri",
+        city != "Miami" | admin_name == "Florida"
+      ) %>% 
+      select(city, lat, lng), 
+    by = c("City" = "city")
+  ) %>% 
+  select(
+    Year, City, MarkerLabel, lat, lng, Event
+  ) %>% 
+  distinct()
+
+FIFA_data <- read_csv(
+  "WorldGames/results.csv"
+) %>% 
+  filter(
+    tournament == "FIFA World Cup"
+  ) %>% 
+  mutate(
+    Year = year(date),
+    country = case_when(
+      country == "England" ~ "United Kingdom",
+      country == "South Korea" ~ "Korea, South",
+      TRUE ~ country
+    ),
+    city = case_when(
+      city == "Berne" ~ "Bern",
+      city == "Solna" ~ "Stockholm",
+      city == "Frankfurt am Main" ~ "Frankfurt",
+      city == "Hanover" ~ "Hannover",
+      city == "Washington, D.C." ~ "Washington",
+      city == "León" ~ "León de los Aldama",
+      city == "Seville" ~ "Sevilla",
+      city == "La Coruña" ~ "A Coruña",
+      city == "Kobe" ~ "Kōbe",
+      city == "Osaka" ~ "Ōsaka",
+      city == "Port Elizabeth" ~ "Gqeberha",
+      city == "Ekaterinburg" ~ "Yekaterinburg",
+      city == "Rostov-on-Don" ~ "Rostov",
+      city == "Nizhny Novgorod" ~ "Nizhniy Novgorod",
+      city == "Al Khor" ~ "Al Khawr",
+      city == "Al Rayyan" ~ "Ar Rayyān",
+      city == "Lusail" ~ "Al Wakrah",
+      TRUE ~ city
+    )
+  ) %>% 
+  select(Year, city, country, tournament) %>% 
+  left_join(
+    world_cities %>% 
+      filter(
+        city != "Washington" | admin_name == "District of Columbia",
+        city != "Dallas" | admin_name == "Texas",
+        city != "Pasadena" | admin_name == "California",
+        city != "Gwangju" | capital == "admin",
+        city != "Kashima" | admin_name == "Ibaraki",
+        city != "Natal" | admin_name == "Amazonas",
+        city != "Pontiac" | admin_name == "Michigan",
+        city != "Rostov" | capital == "admin"
+      ),
+    by = c("city", "country")
+  ) %>% 
+  rename(Event = tournament,
+         City = city) %>% 
+  mutate(
+    MarkerLabel = paste(Event, Year)
+  ) %>% 
+  select(
+    Year, City, MarkerLabel, lat, lng, Event
+  ) %>% 
+  distinct()
+
+map_data <- bind_rows(FIFA_data, MLB_data) %>% 
+  mutate(
+    col = case_when(
+      Event == "FIFA World Cup" ~ "green",
+      Event == "MLB 'World' Series" ~ "red"
+    )
+  )
+```
+
+# It's a Small 'World'
+
+The following map shows the locations of different World Cup games as well as the locations of MLB 'World' Series games.
+
+```{r make-map, message=FALSE, warning=FALSE}
+library(leaflet)
+map_data %>% 
+  leaflet() %>% 
+  addTiles() %>% 
+  addCircleMarkers(
+    color = map_data$col,
+    label = map_data$MarkerLabel,
+    radius = 3,
+    weight = 1,
+    opacity = 1
+  ) %>% 
+  addLegend(
+    labels = c("FIFA World Cup", "MLB 'World' Series"),
+    colors = c("green", "red")
+  )
+```
+
+## References
+
+Cities data taken from [SimpleMaps.com](https://simplemaps.com/data/world-cities) (accessed Nov 20, 2024).
+
+Game data is taken from Kaggle:
+
+*   World Series data from [here](https://www.kaggle.com/datasets/thedevastator/world-series-winners-and-losers/data)
+*   World Cup data from [here](https://www.kaggle.com/datasets/martj42/international-football-results-from-1872-to-2017)
