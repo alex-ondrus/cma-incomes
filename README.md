@@ -1,4 +1,4 @@
-# Canadian Median Incomes by Forward Sorting Area
+# Developing Data Products Sandbox
 
 This repository is my sandbox for projects done as part of the Developing Data Products course offered by Johns Hopkins University, delivered through Coursera as part of the Data Science: Statistics and Machine Learning Specialization.
 
@@ -13,3 +13,7 @@ The idea is very loosely based on the Harvard T.H. Chan School of Public Health 
 ## "World" Championships
 
 This project is to generate a map comparing the locations where World Cup games have been played and where World Series games have been played. City location data is taken from [SimpleMaps.com](https://simplemaps.com/data/world-cities). FIFA World Cup data is taken from Mart Jurisoo via [Kagle](https://www.kaggle.com/datasets/martj42/international-football-results-from-1872-to-2017). Data for World Series locations is taken from [Kagle](https://www.kaggle.com/datasets/thedevastator/world-series-winners-and-losers/data) as well.
+
+## Goal Time in Football Games
+
+Using the same data as in the 'World' Championships graph (Mart Jurisoo via [Kagle](https://www.kaggle.com/datasets/martj42/international-football-results-from-1872-to-2017)), I plot the minute at which each goal was scored in each game. I colour the points by whether the goal was scored by the home team or the away team.

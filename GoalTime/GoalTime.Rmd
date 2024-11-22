@@ -1,0 +1,56 @@
+---
+title: "Goal Time"
+author: "Alexander Ondrus"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+# Timing of Football Goals
+
+Using data from Mart Jurisoo via [Kagle](https://www.kaggle.com/datasets/martj42/international-football-results-from-1872-to-2017), I plot the timing of goals scored in international football games in 2023 (the last full year for which data is available).
+
+```{r load-parse-graph, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(plotly)
+
+football_goals <- read_csv(
+  "goalscorers.csv",
+  show_col_types = FALSE
+) %>% 
+  mutate(
+    home_goal = team == home_team
+  ) %>% 
+  select(
+    date, minute, home_goal
+  )
+
+football_goals_gg <- football_goals %>% 
+  drop_na() %>% 
+  filter(year(date) == 2023) %>% 
+  ggplot(
+    aes(
+      x = date,
+      y = minute,
+      colour = home_goal
+    )
+  ) +
+  geom_point(alpha = 0.3) + 
+  labs(
+    title = "Timing of Goals in International Football Games",
+    x = "Date of Game",
+    y = "Minutes into Game",
+    colour = "Home or Away Goal"
+  ) + 
+  scale_colour_manual(
+    values = c("red", "blue"),
+    labels = c("Away", "Home")
+  ) + 
+  theme_minimal()
+
+ggplotly(football_goals_gg)
+```
+
