@@ -1,0 +1,40 @@
+---
+title: "Median Household Incomes in Canada"
+author: "Alexander Ondrus"
+date: "`r Sys.Date()`"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+source("FSA_CMA_Intersects.R")
+```
+
+## The Problem
+
+* Have a product/service targeted to households with a certain household income
+  * How to know which markets have enough areas with a high (or low) enough median household income to be viable target markets?
+  * Once you have chosen a market, how do you target your marketing to specific areas?
+
+## The Solution
+
+* Statistics Canada performs a Census every 4 years
+* Profiles of each _Forward Sortation Area (FSA)_ (similar to a US Zip Code) include the median household income
+* Need to identify Census Metropolitan Areas (cities and their surrounding communities) that have enough FSAs in the target range
+* I've created a [web app](https://alexondrus.shinyapps.io/CanCensusMedIncome/) that displays this information and allows the user to download the results
+
+## Example
+
+Here's the visual that is generated when the user selects Vancouver from the list of Canadian Census Metropolitan Areas:
+
+```{r van-eg, message=FALSE, warning=FALSE}
+VancouverEg <- intersect_FSAs_join_data("Vancouver")
+VancouverPlot <- FSA_CMA_plot(VancouverEg)
+plot(VancouverPlot)
+```
+
+## Download
+
+The 'Download' button allows the user to download the list of forward sortation areas along with the median household income for the chosen census metropolotian area.
+
+Give it a try!
